@@ -12,14 +12,14 @@ const config = {
 const app = express();
 const client = new Client(config);
 
-// 讓 Express 支援 JSON
+// 讓 Express 可以處理 JSON（LINE webhook 需要）
 app.use(express.json());
 
 // __dirname in ES Module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 首頁路由
+// 首頁
 app.get("/", (req, res) => {
   res.send(`
     <h1>LINE 報價單系統</h1>
@@ -28,9 +28,9 @@ app.get("/", (req, res) => {
   `);
 });
 
-// LINE Webhook
+// webhook（直接設為 "/" 讓 routes 對應）
 app.post("/", middleware(config), async (req, res) => {
-  console.log("Webhook received:", JSON.stringify(req.body, null, 2));
+  console.log("Webhook body:", req.body);
   Promise.all(req.body.events.map(handleEvent)).then((result) =>
     res.json(result)
   );
@@ -57,7 +57,7 @@ async function handleEvent(event) {
   });
 }
 
-// PDF 生成路由
+// PDF
 app.get("/quote.pdf", (req, res) => {
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", 'inline; filename="quote.pdf"');
@@ -65,7 +65,6 @@ app.get("/quote.pdf", (req, res) => {
   const doc = new PDFDocument();
   doc.pipe(res);
 
-  // 用 process.cwd() 取得 Serverless 打包後的檔案位置
   const fontPath = path.join(process.cwd(), "fonts", "NotoSansTC-Regular.ttf");
   doc.font(fontPath);
 
@@ -80,6 +79,4 @@ app.get("/quote.pdf", (req, res) => {
   doc.end();
 });
 
-// ❌ 不要 app.listen()
-// ✅ 用 export default 讓 Vercel Serverless Function 呼叫
 export default app;

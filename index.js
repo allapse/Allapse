@@ -46,7 +46,7 @@ app.get("/quote.pdf", (req, res) => {
   res.setHeader("Content-Disposition", "attachment; filename=quote.pdf");
 
   const doc = new PDFDocument();
-  const fontPath = path.join(process.cwd(), 'fonts', 'NotoSansTC-Regular.ttf');
+  const fontPath = path.resolve('fonts', 'NotoSansTC-Regular.ttf');
   doc.font(fontPath);
   
   doc.pipe(res);

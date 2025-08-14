@@ -9,7 +9,6 @@ const config = {
   channelSecret: process.env.LINE_CHANNEL_SECRET
 };
 
-
 const app = express();
 const client = new Client(config);
 
@@ -62,10 +61,11 @@ app.get('/quote.pdf', (req, res) => {
   res.setHeader('Content-Disposition', 'inline; filename="quote.pdf"');
 
   const doc = new PDFDocument();
+
   doc.pipe(res);
 
-  // 使用 process.cwd() 確保 Vercel 能找到字型
-  const fontPath = path.join(process.cwd(), 'fonts', 'NotoSansTC-Regular.ttf');
+  // 絕對路徑載入字型
+  const fontPath = path.join(__dirname, 'fonts', 'NotoSansTC-Regular.ttf');
   doc.font(fontPath);
 
   doc.fontSize(20).text("報價單", { align: "center" });
@@ -79,7 +79,6 @@ app.get('/quote.pdf', (req, res) => {
   doc.end();
 });
 
-// 本地測試用
-app.listen(3000, () => {
-  console.log("Server is running on port 3000");
-});
+// ❌ 刪掉 app.listen()
+// ✅ 改成 export default，讓 Vercel 可以呼叫
+export default app;

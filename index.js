@@ -12,11 +12,10 @@ const config = {
 const app = express();
 const client = new Client(config);
 
-// ESM 要先自己算出 __dirname
+// 讓 __dirname 在 ES module 中可用
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 字型路徑（確保部署後可用）
 const fontPath = path.join(__dirname, 'fonts', 'NotoSansTC-Regular.ttf');
 
 // LINE Webhook
@@ -50,18 +49,15 @@ async function handleEvent(event) {
 }
 
 // PDF 生成路由
-app.get("/quote.pdf", (req, res) => {
-  res.setHeader("Content-Type", "application/pdf");
-  res.setHeader("Content-Disposition", "attachment; filename=quote.pdf");
-
+app.get('/quote.pdf', (req, res) => {
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', 'inline; filename="quote.pdf"');
+  
   const doc = new PDFDocument();
   doc.pipe(res);
-  
-  doc.font(fontPath)
-     .fillColor('black')
-     .fontSize(20)
-     .text("報價單", { align: "center" });
 
+  doc.font(fontPath);
+  doc.fontSize(20).text("報價單", { align: "center" });
   doc.moveDown();
   doc.fontSize(14).text("客戶名稱：測試公司");
   doc.text("服務內容：網站開發");

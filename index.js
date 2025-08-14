@@ -9,6 +9,7 @@ const config = {
   channelSecret: process.env.LINE_CHANNEL_SECRET
 };
 
+
 const app = express();
 const client = new Client(config);
 

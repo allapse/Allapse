@@ -6,6 +6,8 @@
     }
   },
   "routes": [
-    { "src": "/", "dest": "/api/index" }
+    { "src": "/", "dest": "/api/index" },
+    { "src": "/quote.pdf", "dest": "/api/index" },
+    { "src": "/webhook", "dest": "/api/index" }
   ]
 }

@@ -46,11 +46,11 @@ app.get("/quote.pdf", (req, res) => {
   res.setHeader("Content-Disposition", "attachment; filename=quote.pdf");
 
   const doc = new PDFDocument();
-  doc.pipe(res);
-
   const fontPath = path.join(process.cwd(), 'fonts', 'NotoSansTC-Regular.ttf');
   doc.font(fontPath);
-
+  
+  doc.pipe(res);
+  
   doc.fontSize(20).text("報價單", { align: "center" });
   doc.moveDown();
   doc.fontSize(14).text("客戶名稱：測試公司");

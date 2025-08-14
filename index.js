@@ -1,5 +1,7 @@
 import express from "express";
 import { Client, middleware } from "@line/bot-sdk";
+import path from 'path';
+import { fileURLToPath } from 'url';
 import PDFDocument from "pdfkit";
 
 const config = {
@@ -9,6 +11,13 @@ const config = {
 
 const app = express();
 const client = new Client(config);
+
+// ESM 要先自己算出 __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// 字型路徑（確保部署後可用）
+const fontPath = path.join(__dirname, 'fonts', 'NotoSansTC-Regular.ttf');
 
 // LINE Webhook
 app.post("/webhook", middleware(config), async (req, res) => {
@@ -46,12 +55,12 @@ app.get("/quote.pdf", (req, res) => {
   res.setHeader("Content-Disposition", "attachment; filename=quote.pdf");
 
   const doc = new PDFDocument();
-  const fontPath = path.resolve('fonts', 'NotoSansTC-Regular.ttf');
-  doc.font(fontPath);
-  
-  doc.pipe(res);
-  
-  doc.fontSize(20).text("報價單", { align: "center" });
+
+  doc.font(fontPath)
+     .fillColor('black')
+     .fontSize(20)
+     .text("報價單", { align: "center" });
+
   doc.moveDown();
   doc.fontSize(14).text("客戶名稱：測試公司");
   doc.text("服務內容：網站開發");
@@ -59,6 +68,7 @@ app.get("/quote.pdf", (req, res) => {
   doc.text("交付日期：2025/08/30");
   doc.text("付款方式：50% 預付款，50% 驗收後支付");
 
+  doc.pipe(res);
   doc.end();
 });
 

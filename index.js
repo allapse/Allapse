@@ -1,53 +1,78 @@
 import express from "express";
-import { Client, middleware } from "@line/bot-sdk";
+import { middleware, Client } from "@line/bot-sdk";
+import PDFDocument from "pdfkit";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+// __dirname 替代
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const config = {
   channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN,
-  channelSecret: process.env.LINE_CHANNEL_SECRET
+  channelSecret: process.env.LINE_CHANNEL_SECRET,
 };
 
-const app = express();
 const client = new Client(config);
+const app = express();
 
-// LINE webhook middleware
 app.post("/webhook", middleware(config), (req, res) => {
   Promise.all(req.body.events.map(handleEvent))
-    .then(result => res.json(result))
-    .catch(err => {
+    .then((result) => res.json(result))
+    .catch((err) => {
       console.error(err);
       res.status(500).end();
     });
 });
 
-// 處理訊息
-const generateQuotation = require('./generateQuotation');
-const fs = require('fs');
-
-async function handleTextMessage(event) {
-  if (event.message.text === '報價單測試') {
-    const pdfPath = await generateQuotation({
-      clientName: '測試客戶',
-      items: [
-        { name: '網站開發', price: 5000, qty: 1 },
-        { name: '主機租用', price: 1000, qty: 3 }
-      ]
-    });
-
-    await client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: '報價單已生成！但 LINE 不支援直接發 PDF，你需要給一個下載連結。'
-    });
-
-    // 你可以把 PDF 上傳到雲端（例如 S3、Vercel Storage、Google Drive）
-    // 然後回覆那個連結
+async function handleEvent(event) {
+  if (event.type !== "message" || event.message.type !== "text") {
+    return Promise.resolve(null);
   }
+
+  const userMessage = event.message.text.trim();
+
+  if (userMessage === "生成報價單") {
+    const pdfPath = path.join(__dirname, "quote.pdf");
+    generateQuotePDF(pdfPath);
+
+    // 假設部署在 Vercel，提供靜態檔案下載
+    const fileUrl = `${process.env.BASE_URL}/quote.pdf`;
+
+    return client.replyMessage(event.replyToken, {
+      type: "text",
+      text: `報價單已生成：${fileUrl}`,
+    });
+  }
+
+  return client.replyMessage(event.replyToken, {
+    type: "text",
+    text: "輸入「生成報價單」即可獲得範例 PDF 報價單。",
+  });
 }
 
+function generateQuotePDF(filePath) {
+  const doc = new PDFDocument();
+  const stream = fs.createWriteStream(filePath);
+  doc.pipe(stream);
 
-app.get("/", (req, res) => {
-  res.send("Allapse LINE BOT is running.");
-});
+  doc.fontSize(20).text("報價單", { align: "center" });
+  doc.moveDown();
+  doc.fontSize(12).text(`公司名稱：Allapse Studio`);
+  doc.text(`日期：${new Date().toLocaleDateString()}`);
+  doc.moveDown();
 
-app.listen(3000, () => {
-  console.log("Server is running on port 3000");
+  doc.text(`品項：AI 聊天機器人開發`);
+  doc.text(`金額：NT$ 30,000`);
+  doc.text(`備註：含部署與簡易維護`);
+
+  doc.end();
+}
+
+// 靜態檔案提供（報價單 PDF）
+app.use(express.static(__dirname));
+
+app.listen(process.env.PORT || 3000, () => {
+  console.log("LINE Bot server running");
 });

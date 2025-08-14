@@ -20,16 +20,29 @@ app.post("/webhook", middleware(config), (req, res) => {
 });
 
 // 處理訊息
-function handleEvent(event) {
-  if (event.type !== "message" || event.message.type !== "text") {
-    return Promise.resolve(null);
-  }
+const generateQuotation = require('./generateQuotation');
+const fs = require('fs');
 
-  return client.replyMessage(event.replyToken, {
-    type: "text",
-    text: `你說了：${event.message.text}`
-  });
+async function handleTextMessage(event) {
+  if (event.message.text === '報價單測試') {
+    const pdfPath = await generateQuotation({
+      clientName: '測試客戶',
+      items: [
+        { name: '網站開發', price: 5000, qty: 1 },
+        { name: '主機租用', price: 1000, qty: 3 }
+      ]
+    });
+
+    await client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: '報價單已生成！但 LINE 不支援直接發 PDF，你需要給一個下載連結。'
+    });
+
+    // 你可以把 PDF 上傳到雲端（例如 S3、Vercel Storage、Google Drive）
+    // 然後回覆那個連結
+  }
 }
+
 
 app.get("/", (req, res) => {
   res.send("Allapse LINE BOT is running.");

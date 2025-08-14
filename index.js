@@ -1,29 +1,20 @@
 import express from "express";
-import { middleware, Client } from "@line/bot-sdk";
+import { Client, middleware } from "@line/bot-sdk";
 import PDFDocument from "pdfkit";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-
-// __dirname 替代
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const config = {
   channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN,
-  channelSecret: process.env.LINE_CHANNEL_SECRET,
+  channelSecret: process.env.LINE_CHANNEL_SECRET
 };
 
-const client = new Client(config);
 const app = express();
+const client = new Client(config);
 
-app.post("/webhook", middleware(config), (req, res) => {
-  Promise.all(req.body.events.map(handleEvent))
-    .then((result) => res.json(result))
-    .catch((err) => {
-      console.error(err);
-      res.status(500).end();
-    });
+// LINE Webhook
+app.post("/webhook", middleware(config), async (req, res) => {
+  Promise.all(req.body.events.map(handleEvent)).then((result) =>
+    res.json(result)
+  );
 });
 
 async function handleEvent(event) {
@@ -31,48 +22,44 @@ async function handleEvent(event) {
     return Promise.resolve(null);
   }
 
-  const userMessage = event.message.text.trim();
+  const userMessage = event.message.text;
 
-  if (userMessage === "生成報價單") {
-    const pdfPath = path.join(__dirname, "quote.pdf");
-    generateQuotePDF(pdfPath);
-
-    // 假設部署在 Vercel，提供靜態檔案下載
-    const fileUrl = `${process.env.BASE_URL}/quote.pdf`;
-
+  // 如果用戶輸入「報價單」，回覆下載連結
+  if (userMessage.includes("報價單")) {
+    const pdfUrl = "https://你的-vercel-domain.vercel.app/quote.pdf"; // 這裡換成你的 Vercel domain
     return client.replyMessage(event.replyToken, {
       type: "text",
-      text: `報價單已生成：${fileUrl}`,
+      text: `這是您的報價單下載連結：\n${pdfUrl}`
     });
   }
 
+  // 其他訊息就原封不動回覆
   return client.replyMessage(event.replyToken, {
     type: "text",
-    text: "輸入「生成報價單」即可獲得範例 PDF 報價單。",
+    text: `你說了：「${userMessage}」`
   });
 }
 
-function generateQuotePDF(filePath) {
+// PDF 生成路由
+app.get("/quote.pdf", (req, res) => {
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", "attachment; filename=quote.pdf");
+
   const doc = new PDFDocument();
-  const stream = fs.createWriteStream(filePath);
-  doc.pipe(stream);
+  doc.pipe(res);
 
   doc.fontSize(20).text("報價單", { align: "center" });
   doc.moveDown();
-  doc.fontSize(12).text(`公司名稱：Allapse Studio`);
-  doc.text(`日期：${new Date().toLocaleDateString()}`);
-  doc.moveDown();
-
-  doc.text(`品項：AI 聊天機器人開發`);
-  doc.text(`金額：NT$ 30,000`);
-  doc.text(`備註：含部署與簡易維護`);
+  doc.fontSize(14).text("客戶名稱：測試公司");
+  doc.text("服務內容：網站開發");
+  doc.text("金額：NT$ 30,000");
+  doc.text("交付日期：2025/08/30");
+  doc.text("付款方式：50% 預付款，50% 驗收後支付");
 
   doc.end();
-}
+});
 
-// 靜態檔案提供（報價單 PDF）
-app.use(express.static(__dirname));
-
-app.listen(process.env.PORT || 3000, () => {
-  console.log("LINE Bot server running");
+// 本地測試用
+app.listen(3000, () => {
+  console.log("Server is running on port 3000");
 });

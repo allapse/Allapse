@@ -1,11 +1,11 @@
 {
   "version": 2,
-  "builds": [
-    { "src": "index.js", "use": "@vercel/node" }
-  ],
   "functions": {
     "api/index.js": {
       "includeFiles": "fonts/**"
     }
-  }
+  },
+  "routes": [
+    { "src": "/", "dest": "/api/index" }
+  ]
 }

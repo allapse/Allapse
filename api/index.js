@@ -29,7 +29,8 @@ app.get("/", (req, res) => {
 });
 
 // LINE Webhook
-app.post("/webhook", middleware(config), async (req, res) => {
+app.post("/", middleware(config), async (req, res) => {
+  console.log("Webhook received:", JSON.stringify(req.body, null, 2));
   Promise.all(req.body.events.map(handleEvent)).then((result) =>
     res.json(result)
   );

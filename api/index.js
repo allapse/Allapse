@@ -12,8 +12,17 @@ const config = {
 const app = express();
 const client = new Client(config);
 
-// 讓 Express 可以處理 JSON（LINE webhook 需要）
-app.use(express.json());
+// 只給 /webhook 保留 raw body
+app.post(
+  "/webhook",
+  express.raw({ type: "*/*" }),
+  middleware(config),
+  async (req, res) => {
+    Promise.all(req.body.events.map(handleEvent)).then((result) =>
+      res.json(result)
+    );
+  }
+);
 
 // __dirname in ES Module
 const __filename = fileURLToPath(import.meta.url);
@@ -28,14 +37,7 @@ app.get("/", (req, res) => {
   `);
 });
 
-// webhook（直接設為 "/" 讓 routes 對應）
-app.post("/", middleware(config), async (req, res) => {
-  console.log("Webhook body:", req.body);
-  Promise.all(req.body.events.map(handleEvent)).then((result) =>
-    res.json(result)
-  );
-});
-
+// 處理訊息
 async function handleEvent(event) {
   if (event.type !== "message" || event.message.type !== "text") {
     return Promise.resolve(null);
@@ -57,7 +59,7 @@ async function handleEvent(event) {
   });
 }
 
-// PDF
+// PDF 路由
 app.get("/quote.pdf", (req, res) => {
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", 'inline; filename="quote.pdf"');

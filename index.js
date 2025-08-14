@@ -48,6 +48,9 @@ app.get("/quote.pdf", (req, res) => {
   const doc = new PDFDocument();
   doc.pipe(res);
 
+  const fontPath = path.join(process.cwd(), 'fonts', 'NotoSansCJKtc-Regular.ttf');
+  doc.font(fontPath);
+
   doc.fontSize(20).text("報價單", { align: "center" });
   doc.moveDown();
   doc.fontSize(14).text("客戶名稱：測試公司");

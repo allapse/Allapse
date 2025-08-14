@@ -12,6 +12,9 @@ const config = {
 const app = express();
 const client = new Client(config);
 
+// 讓 Express 支援 JSON
+app.use(express.json());
+
 // __dirname in ES Module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -61,7 +64,7 @@ app.get("/quote.pdf", (req, res) => {
   const doc = new PDFDocument();
   doc.pipe(res);
 
-  // ✅ 用 process.cwd() 取得 Vercel 打包後的檔案位置
+  // 用 process.cwd() 取得 Serverless 打包後的檔案位置
   const fontPath = path.join(process.cwd(), "fonts", "NotoSansTC-Regular.ttf");
   doc.font(fontPath);
 
@@ -76,7 +79,6 @@ app.get("/quote.pdf", (req, res) => {
   doc.end();
 });
 
-// 不要 app.listen()
-// 改成 export default，讓 Vercel 直接呼叫
-
+// ❌ 不要 app.listen()
+// ✅ 用 export default 讓 Vercel Serverless Function 呼叫
 export default app;

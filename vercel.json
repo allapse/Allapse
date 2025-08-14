@@ -5,9 +5,9 @@
   ],
   "routes": [
     { "src": "/(.*)", "dest": "/index.js" }
-  ]
+  ],
   "functions": {
-    "api/**/*.js": {
+    "index.js": {
       "includeFiles": "fonts/NotoSansTC-Regular.ttf"
     }
   }

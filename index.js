@@ -1,7 +1,7 @@
 import express from "express";
 import { Client, middleware } from "@line/bot-sdk";
-import path from 'path';
-import { fileURLToPath } from 'url';
+import path from "path";
+import { fileURLToPath } from "url";
 import PDFDocument from "pdfkit";
 
 const config = {
@@ -39,16 +39,14 @@ async function handleEvent(event) {
 
   const userMessage = event.message.text;
 
-  // 如果用戶輸入「報價單」，回覆下載連結
   if (userMessage.includes("報價單")) {
-    const pdfUrl = "https://allapse.vercel.app/quote.pdf"; // 這裡換成你的 Vercel domain
+    const pdfUrl = "https://allapse.vercel.app/quote.pdf";
     return client.replyMessage(event.replyToken, {
       type: "text",
       text: `這是您的報價單下載連結：\n${pdfUrl}`
     });
   }
 
-  // 其他訊息就原封不動回覆
   return client.replyMessage(event.replyToken, {
     type: "text",
     text: `你說了：「${userMessage}」`
@@ -56,16 +54,15 @@ async function handleEvent(event) {
 }
 
 // PDF 生成路由
-app.get('/quote.pdf', (req, res) => {
-  res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', 'inline; filename="quote.pdf"');
+app.get("/quote.pdf", (req, res) => {
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", 'inline; filename="quote.pdf"');
 
   const doc = new PDFDocument();
-
   doc.pipe(res);
 
-  // 絕對路徑載入字型
-  const fontPath = path.join(__dirname, 'fonts', 'NotoSansTC-Regular.ttf');
+  // ✅ 用 process.cwd() 取得 Vercel 打包後的檔案位置
+  const fontPath = path.join(process.cwd(), "fonts", "NotoSansTC-Regular.ttf");
   doc.font(fontPath);
 
   doc.fontSize(20).text("報價單", { align: "center" });
@@ -79,6 +76,6 @@ app.get('/quote.pdf', (req, res) => {
   doc.end();
 });
 
-// ❌ 刪掉 app.listen()
-// ✅ 改成 export default，讓 Vercel 可以呼叫
+// 不要 app.listen()
+// 改成 export default，讓 Vercel 直接呼叫
 export default app;

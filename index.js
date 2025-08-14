@@ -26,7 +26,7 @@ async function handleEvent(event) {
 
   // 如果用戶輸入「報價單」，回覆下載連結
   if (userMessage.includes("報價單")) {
-    const pdfUrl = "https://你的-vercel-domain.vercel.app/quote.pdf"; // 這裡換成你的 Vercel domain
+    const pdfUrl = "https://allapse.vercel.app/quote.pdf"; // 這裡換成你的 Vercel domain
     return client.replyMessage(event.replyToken, {
       type: "text",
       text: `這是您的報價單下載連結：\n${pdfUrl}`

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; }
+  h1 { color: #333; }
+  table { width: 100%; border-collapse: collapse; }
+  td, th { border: 1px solid #ddd; padding: 8px; }
+</style>
+</head>
+<body>
+  <h1>報價單</h1>
+  <p>客戶名稱：{{clientName}}</p>
+  <p>日期：{{date}}</p>
+  <table>
+    <tr><th>項目</th><th>單價</th><th>數量</th><th>總計</th></tr>
+    {{rows}}
+  </table>
+  <p><b>總金額：{{total}}</b></p>
+</body>
+</html>

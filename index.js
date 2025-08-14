@@ -16,6 +16,15 @@ const client = new Client(config);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// 首頁路由
+app.get("/", (req, res) => {
+  res.send(`
+    <h1>LINE 報價單系統</h1>
+    <p>這是用 PDFKit 生成 PDF 的範例。</p>
+    <p><a href="/quote.pdf" target="_blank">預覽報價單 PDF</a></p>
+  `);
+});
+
 // LINE Webhook
 app.post("/webhook", middleware(config), async (req, res) => {
   Promise.all(req.body.events.map(handleEvent)).then((result) =>
@@ -52,11 +61,10 @@ app.get('/quote.pdf', (req, res) => {
   res.setHeader('Content-Disposition', 'inline; filename="quote.pdf"');
 
   const doc = new PDFDocument();
-
   doc.pipe(res);
 
-  // 絕對路徑載入字型
-  const fontPath = path.join(__dirname, 'fonts', 'NotoSansTC-Regular.ttf');
+  // 使用 process.cwd() 確保 Vercel 能找到字型
+  const fontPath = path.join(process.cwd(), 'fonts', 'NotoSansTC-Regular.ttf');
   doc.font(fontPath);
 
   doc.fontSize(20).text("報價單", { align: "center" });
@@ -69,6 +77,7 @@ app.get('/quote.pdf', (req, res) => {
 
   doc.end();
 });
+
 // 本地測試用
 app.listen(3000, () => {
   console.log("Server is running on port 3000");

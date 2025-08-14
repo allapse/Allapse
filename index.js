@@ -55,7 +55,8 @@ app.get("/quote.pdf", (req, res) => {
   res.setHeader("Content-Disposition", "attachment; filename=quote.pdf");
 
   const doc = new PDFDocument();
-
+  doc.pipe(res);
+  
   doc.font(fontPath)
      .fillColor('black')
      .fontSize(20)
@@ -68,7 +69,6 @@ app.get("/quote.pdf", (req, res) => {
   doc.text("交付日期：2025/08/30");
   doc.text("付款方式：50% 預付款，50% 驗收後支付");
 
-  doc.pipe(res);
   doc.end();
 });
 

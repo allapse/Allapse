@@ -12,11 +12,9 @@ const config = {
 const app = express();
 const client = new Client(config);
 
-// 讓 __dirname 在 ES module 中可用
+// __dirname in ES Module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-const fontPath = path.join(__dirname, 'fonts', 'NotoSansTC-Regular.ttf');
 
 // LINE Webhook
 app.post("/webhook", middleware(config), async (req, res) => {
@@ -52,11 +50,15 @@ async function handleEvent(event) {
 app.get('/quote.pdf', (req, res) => {
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', 'inline; filename="quote.pdf"');
-  
+
   const doc = new PDFDocument();
+
   doc.pipe(res);
 
+  // 絕對路徑載入字型
+  const fontPath = path.join(__dirname, 'fonts', 'NotoSansTC-Regular.ttf');
   doc.font(fontPath);
+
   doc.fontSize(20).text("報價單", { align: "center" });
   doc.moveDown();
   doc.fontSize(14).text("客戶名稱：測試公司");
@@ -67,7 +69,6 @@ app.get('/quote.pdf', (req, res) => {
 
   doc.end();
 });
-
 // 本地測試用
 app.listen(3000, () => {
   console.log("Server is running on port 3000");

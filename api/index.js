@@ -37,7 +37,7 @@ async function handleEvent(event) {
   if (event.type !== "message" || event.message.type !== "text") return;
 
   const userId = event.source.userId;
-  const text = event.message.text.trim().slice(0, 7); // 強制限制 7 字
+  const text = event.message.text;
   const replyText = await handleChallenge(userId, text);
 
   await client.replyMessage(event.replyToken, {

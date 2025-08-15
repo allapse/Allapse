@@ -1,14 +1,13 @@
 {
-  "name": "allapse-line-bot",
-  "version": "1.0.0",
-  "main": "index.js",
-  "type": "module",
-  "scripts": {
-    "start": "node index.js"
+  "version": 2,
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "fonts/**"
+    }
   },
-  "dependencies": {
-    "@line/bot-sdk": "^7.5.2",
-    "express": "^4.18.2",
-    "@supabase/supabase-js": "^2.2.0"
-  }
+  "routes": [
+    { "src": "^/$", "dest": "/api/index" },
+    { "src": "^/quote\\.pdf$", "dest": "/api/index" },
+    { "src": "^/webhook$", "dest": "/api/index" }
+  ]
 }

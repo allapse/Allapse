@@ -51,7 +51,7 @@ async function handleEvent(event) {
 async function handleChallenge(userId, textContent) {
   // 限制 7 字內文字
   if (textContent.length > 7) {
-    return '請在有限中找到無限！😘'
+    return '挑戰失敗！找尋有限中的無限！♾️'
   }
   
   // 先檢查是否有其他人提交過相同文字

@@ -3,6 +3,12 @@ import { Client, middleware } from "@line/bot-sdk";
 import path from "path";
 import { fileURLToPath } from "url";
 import PDFDocument from "pdfkit";
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const config = {
   channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN,
@@ -24,32 +30,27 @@ app.post(
   }
 );
 
-// __dirname in ES Module
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// 首頁
-app.get("/", (req, res) => {
-  res.send(`
-    <h1>LINE 報價單系統</h1>
-    <p>這是用 PDFKit 生成 PDF 的範例。</p>
-    <p><a href="/quote.pdf" target="_blank">預覽報價單 PDF</a></p>
-  `);
-});
-
-// 處理訊息
 async function handleEvent(event) {
-  if (event.type !== "message" || event.message.type !== "text") {
-    return Promise.resolve(null);
-  }
+  if (event.type !== "message" || event.message.type !== "text") return null;
 
   const userMessage = event.message.text;
 
-  if (userMessage.includes("報價單")) {
-    const pdfUrl = "https://allapse.vercel.app/quote.pdf";
+  // 限制 7 字內文字
+  if (userMessage.length <= 7) {
+    const { data, error } = await supabase
+      .from("submissions")
+      .insert([
+        {
+          user_id: event.source.userId,
+          text_content: userMessage,
+          timestamp: new Date().toISOString()
+        }
+      ]);
+    if (error) console.log(error);
+
     return client.replyMessage(event.replyToken, {
       type: "text",
-      text: `這是您的報價單下載連結：\n${pdfUrl}`
+      text: "已收到你的挑戰！👍"
     });
   }
 
@@ -59,26 +60,9 @@ async function handleEvent(event) {
   });
 }
 
-// PDF 路由
-app.get("/quote.pdf", (req, res) => {
-  res.setHeader("Content-Type", "application/pdf");
-  res.setHeader("Content-Disposition", 'inline; filename="quote.pdf"');
-
-  const doc = new PDFDocument();
-  doc.pipe(res);
-
-  const fontPath = path.join(process.cwd(), "fonts", "NotoSansTC-Regular.ttf");
-  doc.font(fontPath);
-
-  doc.fontSize(20).text("報價單", { align: "center" });
-  doc.moveDown();
-  doc.fontSize(14).text("客戶名稱：測試公司");
-  doc.text("服務內容：網站開發");
-  doc.text("金額：NT$ 30,000");
-  doc.text("交付日期：2025/08/30");
-  doc.text("付款方式：50% 預付款，50% 驗收後支付");
-
-  doc.end();
+// 可選首頁
+app.get("/", (req, res) => {
+  res.send("<h1>想像力極限挑戰 LINE Bot</h1>");
 });
 
 export default app;

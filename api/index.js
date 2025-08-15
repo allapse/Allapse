@@ -38,11 +38,12 @@ async function handleEvent(event) {
 
  const userId = event.source.userId;
  const text = event.message.text;
+ const replyText = '挑戰失敗！找尋有限中的無限！♾️';
+ 
  // 限制 7 字內文字
- if (text.length > 7) {
-   return '挑戰失敗！找尋有限中的無限！♾️'
+ if (text.length < 8) {
+  const replyText = await handleChallenge(userId, text);
  }
- const replyText = await handleChallenge(userId, text);
 
  await client.replyMessage(event.replyToken, {
    type: "text",

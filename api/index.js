@@ -47,48 +47,69 @@ async function handleEvent(event) {
 }
 
 // 挑戰文字處理
+// 挑戰文字處理（改版）
 async function handleChallenge(userId, textContent) {
-  // 查詢是否有人提交過這個文字
-  const { data: existingText, error: fetchError } = await supabase
+  // 限制 7 字內文字
+  if (userMessage.length > 7) {
+    return '請在有限中找到無限！😘'
+  }
+  
+  // 先檢查是否有其他人提交過相同文字
+  const { data: sameText, error: sameTextError } = await supabase
     .from('submission')
     .select('*')
     .eq('text_content', textContent)
-    .single()
+    .neq('user_id', userId) // 確保是別人提交的
     .maybeSingle();
 
-  if (fetchError) {
-    console.error('Fetch error:', fetchError);
+  if (sameTextError) {
+    console.error('Fetch error (same text):', sameTextError);
     return '系統錯誤';
   }
 
-  if (existingText) {
-    if (existingText.user_id === userId) {
-      // 同人修改文字（更新 timestamp）
-      const { error: updateError } = await supabase
-        .from('submission')
-        .update({ timestamp: new Date().toISOString() })
-        .eq('submission_id', existingText.submission_id);
+  if (sameText) {
+    // 幫原作者 duplicate_count + 1
+    const { error: dupError } = await supabase
+      .from('submission')
+      .update({ duplicate_count: sameText.duplicate_count + 1 })
+      .eq('submission_id', sameText.submission_id);
 
-      if (updateError) {
-        console.error(updateError);
-        return '系統錯誤';
-      }
-      return '已更新挑戰';
-    } else {
-      // 不同人提交相同文字 → duplicate_count +1
-      const { error: dupError } = await supabase
-        .from('submission')
-        .update({ duplicate_count: existingText.duplicate_count + 1 })
-        .eq('submission_id', existingText.submission_id);
-
-      if (dupError) {
-        console.error(dupError);
-        return '系統錯誤';
-      }
-      return '重複';
+    if (dupError) {
+      console.error('Duplicate update error:', dupError);
+      return '系統錯誤';
     }
+    return '您的預判被預判了！🙀';
+  }
+
+  // 沒有重複 → 檢查這個使用者是否已經提交過挑戰
+  const { data: userSubmission, error: userFetchError } = await supabase
+    .from('submission')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (userFetchError) {
+    console.error('Fetch error (user check):', userFetchError);
+    return '系統錯誤';
+  }
+
+  if (userSubmission) {
+    // 更新自己的挑戰文字
+    const { error: updateError } = await supabase
+      .from('submission')
+      .update({
+        text_content: textContent,
+        timestamp: new Date().toISOString()
+      })
+      .eq('submission_id', userSubmission.submission_id);
+
+    if (updateError) {
+      console.error('Update error:', updateError);
+      return '系統錯誤';
+    }
+    return '您的極限已提升！👍';
   } else {
-    // 完全新挑戰 → insert
+    // 新增挑戰
     const { error: insertError } = await supabase
       .from('submission')
       .insert([{
@@ -99,10 +120,10 @@ async function handleChallenge(userId, textContent) {
       }]);
 
     if (insertError) {
-      console.error(insertError);
+      console.error('Insert error:', insertError);
       return '系統錯誤';
     }
-    return '收到挑戰';
+    return '挑戰成功！將進入決賽圈！🎉';
   }
 }
 

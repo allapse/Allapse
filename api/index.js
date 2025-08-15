@@ -50,7 +50,7 @@ async function handleEvent(event) {
 async function handleChallenge(userId, textContent) {
   // 查詢是否有人提交過這個文字
   const { data: existingText, error: fetchError } = await supabase
-    .from('submissions')
+    .from('submission')
     .select('*')
     .eq('text_content', textContent)
     .single()
@@ -65,7 +65,7 @@ async function handleChallenge(userId, textContent) {
     if (existingText.user_id === userId) {
       // 同人修改文字（更新 timestamp）
       const { error: updateError } = await supabase
-        .from('submissions')
+        .from('submission')
         .update({ timestamp: new Date().toISOString() })
         .eq('submission_id', existingText.submission_id);
 
@@ -77,7 +77,7 @@ async function handleChallenge(userId, textContent) {
     } else {
       // 不同人提交相同文字 → duplicate_count +1
       const { error: dupError } = await supabase
-        .from('submissions')
+        .from('submission')
         .update({ duplicate_count: existingText.duplicate_count + 1 })
         .eq('submission_id', existingText.submission_id);
 
@@ -90,7 +90,7 @@ async function handleChallenge(userId, textContent) {
   } else {
     // 完全新挑戰 → insert
     const { error: insertError } = await supabase
-      .from('submissions')
+      .from('submission')
       .insert([{
         user_id: userId,
         text_content: textContent,

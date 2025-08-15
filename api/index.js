@@ -42,7 +42,7 @@ async function handleEvent(event) {
  
  // 限制 7 字內文字
  if (text.length < 8) {
-  const replyText = await handleChallenge(userId, text);
+  replyText = await handleChallenge(userId, text);
  }
 
  await client.replyMessage(event.replyToken, {

@@ -95,7 +95,7 @@ async function handleChallenge(userId, textContent) {
         user_id: userId,
         text_content: textContent,
         timestamp: new Date().toISOString(),
-        duplicate_count: 1
+        duplicate_count: 0
       }]);
 
     if (insertError) {

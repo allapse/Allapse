@@ -50,7 +50,7 @@ async function handleEvent(event) {
 // 挑戰文字處理（改版）
 async function handleChallenge(userId, textContent) {
   // 限制 7 字內文字
-  if (userMessage.length > 7) {
+  if (textContent.length > 7) {
     return '請在有限中找到無限！😘'
   }
   
